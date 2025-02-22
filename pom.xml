@@ -11,8 +11,8 @@
     <groupId>com.teamarc</groupId>
     <artifactId>proxima</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>demo</name>
-    <description>demo</description>
+    <name>proxima</name>
+    <description>proxima</description>
     <url/>
     <licenses>
         <license/>
