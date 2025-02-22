@@ -2,13 +2,19 @@ package com.teamarc.proxima.services;
 
 import com.teamarc.proxima.dto.*;
 import com.teamarc.proxima.entity.*;
+import com.teamarc.proxima.entity.enums.ApplicationStatus;
 import com.teamarc.proxima.exceptions.ResourceNotFoundException;
 import com.teamarc.proxima.repository.ApplicantRepository;
+import com.teamarc.proxima.repository.JobApplicationRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Field;
@@ -23,8 +29,40 @@ public class ApplicantService {
 
 
     private final ApplicantRepository applicantRepository;
+    private final JobApplicationRepository jobApplicationRepository;
     private final ModelMapper modelMapper;
+    private final JobService jobService;
 
+    @Transactional
+    public JobApplicationDTO applyJob(Long jobId, JobApplicationDTO jobApplicationDTO) {
+
+        Job job = modelMapper.map(jobService.getJobById(jobId), Job.class);
+        if (job.getJobStatus().toString().equals("CLOSED")) {
+            throw new RuntimeException("Job is closed");
+        }
+
+        if (jobApplicationDTO == null || jobApplicationDTO.getJobId() == null) {
+            throw new IllegalArgumentException("Invalid job application data");
+        }
+
+        JobApplication jobApplication = modelMapper.map(jobApplicationDTO, JobApplication.class);
+        jobApplication.setApplicationStatus(ApplicationStatus.APPLIED);
+        jobApplication.setJob(modelMapper.map(jobService.getJobById(jobApplicationDTO.getJobId()), Job.class));
+        JobApplication savedJobApplication = jobApplicationRepository.save(jobApplication);
+
+        return modelMapper.map(savedJobApplication, JobApplicationDTO.class);
+    }
+
+    @Transactional
+    public JobApplicationDTO withdrawApplication(Long applicationId) {
+        JobApplication jobApplication = jobApplicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job application not found"));
+        jobApplication.setApplicationStatus(ApplicationStatus.WITHDRAWN);
+        JobApplicationDTO jobApplicationDTO = modelMapper.map(jobApplication, JobApplicationDTO.class);
+        jobApplicationRepository.delete(jobApplication);
+
+        return jobApplicationDTO;
+    }
 
     public ApplicantDTO getApplicantProfile() {
         Applicant applicant = getCurrentApplicant();
@@ -32,6 +70,10 @@ public class ApplicantService {
 
     }
 
+    public Page<JobApplicationDTO> getAllJobApplications(PageRequest pageRequest, Pageable pageable) {
+        Page<JobApplication> jobApplications = jobApplicationRepository.findByApplicant(getCurrentApplicant(), pageRequest, pageable);
+        return jobApplications.map(jobApplication -> modelMapper.map(jobApplication, JobApplicationDTO.class));
+    }
 
     public Applicant getCurrentApplicant() {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -67,6 +109,10 @@ public class ApplicantService {
         applicantRepository.save(applicant);
     }
 
+    public String checkApplicationStatus(Long applicationId) {
+        JobApplication jobApplication = jobApplicationRepository.findById(applicationId).orElseThrow(() -> new ResourceNotFoundException("Job application not found"));
+        return jobApplication.getApplicationStatus().name();
+    }
 
     public ApplicantDTO getApplicantById(Long applicantId) {
         return modelMapper.map(applicantRepository.findById(applicantId)
@@ -74,6 +120,18 @@ public class ApplicantService {
     }
 
 
+    public JobApplication getApplicationById(Long applicationId) {
+        return jobApplicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job application not found with id: " + applicationId));
+    }
+
+    public boolean isOwnerOfApplication(Long applicationId) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        JobApplication jobApplication = getApplicationById(applicationId);
+        ApplicantDTO applicant = getApplicantById(jobApplication.getApplicationId());
+        User applicationUser = modelMapper.map(applicant.getUser(), User.class);
+        return user.equals(applicationUser);
+    }
 
 
     public boolean isOwnerOfProfile(Long applicantId) {
@@ -82,6 +140,5 @@ public class ApplicantService {
         User applicantUser = modelMapper.map(applicant.getUser(), User.class);
         return user.equals(applicantUser);
     }
-
 
 }
