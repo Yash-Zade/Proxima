@@ -21,8 +21,8 @@ public class UserService implements UserDetailsService {
     private final OnboardNewMentorRepository onboardNewMentorRepository;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
-    private final ApplicantService applicantService;
     private final OnBoardNewCollegeRepository onBoardNewCollegeRepository;
+    private final ApplicantRepository applicantRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -46,9 +46,14 @@ public class UserService implements UserDetailsService {
     }
 
 
-    public void requestApplicantOnboard(Long userId) {
+    public Applicant requestApplicantOnboard(Long userId) {
         User user=userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        applicantService.createNewApplicant(user);
+        Applicant applicant = Applicant.builder()
+                .user(user)
+                .jobApplications(null)
+                .resume(null)
+                .build();
+        return applicantRepository.save(applicant);
     }
 
     public void requestCollegeOnboard(OnBoardNewCollegeDTO collegeRequestDTO) {

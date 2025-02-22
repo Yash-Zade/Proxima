@@ -3,6 +3,7 @@ package com.teamarc.proxima.services;
 import com.teamarc.proxima.dto.*;
 import com.teamarc.proxima.entity.*;
 import com.teamarc.proxima.entity.enums.ApplicationStatus;
+import com.teamarc.proxima.entity.enums.SessionStatus;
 import com.teamarc.proxima.exceptions.ResourceNotFoundException;
 import com.teamarc.proxima.repository.ApplicantRepository;
 import com.teamarc.proxima.repository.JobApplicationRepository;
@@ -24,14 +25,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ApplicantService {
 
-//    @Value("${base.url}")
-//    private String baseUrl;
-
-
     private final ApplicantRepository applicantRepository;
     private final JobApplicationRepository jobApplicationRepository;
     private final ModelMapper modelMapper;
     private final JobService jobService;
+    private final SessionService sessionService;
+    private final RatingService ratingService;
+    private final SessionManagementService sessionManagementService;
+    private final WalletService walletService;
 
     @Transactional
     public JobApplicationDTO applyJob(Long jobId, JobApplicationDTO jobApplicationDTO) {
@@ -82,14 +83,6 @@ public class ApplicantService {
 
     }
 
-    public Applicant createNewApplicant(User user) {
-        Applicant applicant = Applicant.builder()
-                .user(user)
-                .jobApplications(null)
-                .resume(null)
-                .build();
-        return applicantRepository.save(applicant);
-    }
 
     public ApplicantDTO updateProfile(Long applicantId, Map<String, Object> updates) {
         Applicant applicant = applicantRepository.findById(applicantId)
@@ -120,6 +113,33 @@ public class ApplicantService {
     }
 
 
+    public SessionDTO requestSession(Long sessionId) {
+        ApplicantDTO applicant = getApplicantProfile();
+        return sessionManagementService.requestSession(sessionId, applicant);
+    }
+
+
+    public MentorProfileDTO rateMentor(RatingDTO ratingDTO, Long sessionId) {
+        Session session = modelMapper.map(sessionService.getSessionById(sessionId), Session.class);
+        Applicant applicant = getCurrentApplicant();
+        if (!applicant.equals(session.getApplicant())) {
+            throw new RuntimeException("Applicant is not the owner of session");
+        }
+        if (!session.getSessionStatus().equals(SessionStatus.COMPLETED)) {
+            throw new RuntimeException("Session status is not ended hence cannot be Rated, status: " + session.getSessionStatus());
+        }
+
+        return ratingService.rateMentor(ratingDTO);
+    }
+
+    public SessionDTO joinSession(Long sessionId, String otp) {
+        return sessionManagementService.joinSession(sessionId, otp);
+    }
+
+    public SessionDTO endSession(Long sessionId) {
+        return sessionManagementService.endSessionByApplicant(sessionId);
+    }
+
     public JobApplication getApplicationById(Long applicationId) {
         return jobApplicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job application not found with id: " + applicationId));
@@ -133,6 +153,13 @@ public class ApplicantService {
         return user.equals(applicationUser);
     }
 
+    public boolean isOwnerOfSession(Long sessionId) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        SessionDTO session = sessionService.getSessionById(sessionId);
+        ApplicantDTO applicant = getApplicantById(session.getApplicantId());
+        User sessionUser = modelMapper.map(applicant.getUser(), User.class);
+        return user.equals(sessionUser);
+    }
 
     public boolean isOwnerOfProfile(Long applicantId) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -141,4 +168,13 @@ public class ApplicantService {
         return user.equals(applicantUser);
     }
 
+    public SessionDTO cancelSession(Long sessionId) {
+        return sessionManagementService.cancelSession(sessionId);
+    }
+
+
+    public WalletDTO getWallet() {
+        Wallet wallet = walletService.getWalletByUserId(getCurrentApplicant().getUser().getId());
+        return modelMapper.map(wallet, WalletDTO.class);
+    }
 }

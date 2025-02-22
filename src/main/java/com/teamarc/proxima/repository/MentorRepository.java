@@ -10,4 +10,5 @@ import java.util.Optional;
 
 @Repository
 public interface MentorRepository extends JpaRepository<Mentor, Long> {
+    Optional<Mentor> findByUser(User user);
 }
