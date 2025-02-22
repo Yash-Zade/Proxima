@@ -15,4 +15,17 @@ import java.util.Optional;
 
 @Repository
 public interface JobApplicationRepository extends JpaRepository<JobApplication, Long> {
+    Page<JobApplication> findByApplicant(Applicant currentApplicant, PageRequest pageRequest, Pageable pageable);
+
+    Page<JobApplication> findByJob_JobId(Long jobId, PageRequest pageRequest, Pageable pageable);
+
+
+    Optional<JobApplication> findByJob_JobIdAndApplicant_ApplicantId(Long jobId, Long applicantId);
+
+    @Query("SELECT j FROM JobApplication j " +
+            "WHERE j.job.jobId = :jobId " +
+            "AND j.applicationStatus = :applicationStatus"
+    )
+    Page<JobApplication> findByApplicationStatus(Long jobId, ApplicationStatus applicationStatus, PageRequest pageRequest, Pageable pageable);
+
 }

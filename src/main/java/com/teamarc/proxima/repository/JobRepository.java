@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job, Long> {
+    Page<Job> findByPostedBy_EmployerId(Long employerId, PageRequest pageRequest, Pageable pageable);
 }
