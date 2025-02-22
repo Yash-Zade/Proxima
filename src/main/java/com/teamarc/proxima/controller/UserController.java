@@ -38,4 +38,9 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping(path = "/request/student/{userId}")
+    public ResponseEntity<StudentDTO> requestToBeAStudent(@PathVariable Long userId,@RequestBody String collegeName) {
+        return ResponseEntity.ok(userService.requestStudentOnboard(userId,collegeName));
+    }
+
 }

@@ -24,4 +24,7 @@ public class College {
 
     @OneToMany(mappedBy = "college", cascade = CascadeType.ALL)
     private List<Student> students;
+
+    @OneToOne
+    private User user;
 }

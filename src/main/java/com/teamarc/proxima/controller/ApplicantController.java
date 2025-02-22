@@ -2,7 +2,6 @@ package com.teamarc.proxima.controller;
 
 import com.teamarc.proxima.dto.*;
 import com.teamarc.proxima.services.ApplicantService;
-import com.teamarc.proxima.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,19 +23,17 @@ import java.util.Map;
 public class ApplicantController {
 
     private final ApplicantService applicantService;
-    private final UserService userService;
-
 
     @GetMapping(path = "/profile")
     public ResponseEntity<ApplicantDTO> getApplicantProfile() {
         return ResponseEntity.ok(applicantService.getApplicantProfile());
     }
 
-    @PreAuthorize("@applicantService.isOwnerOfProfile(#id)")
-    @PutMapping(path = "/profile/{id}")
-    public ResponseEntity<ApplicantDTO> updateProfile(@RequestBody Map<String, Object> object, @PathVariable Long id) {
-        return ResponseEntity.ok(applicantService.updateProfile(id, object));
-    }
+//    @PreAuthorize("@applicantService.isOwnerOfProfile(#id)")
+//    @PutMapping(path = "/profile/{id}")
+//    public ResponseEntity<ApplicantDTO> updateProfile(@RequestBody Map<String, Object> object, @PathVariable Long id) {
+//        return ResponseEntity.ok(applicantService.updateProfile(id, object));
+//    }
 
     @PostMapping(path = "/jobs/{jobId}/apply")
     public ResponseEntity<List<QuestionDTO>> applyForJob(@PathVariable Long jobId, @RequestBody JobApplicationDTO jobApplication) {
@@ -50,8 +47,9 @@ public class ApplicantController {
     }
 
     @PostMapping(path = "/jobs/{application-id}/accept-application")
-    public ResponseEntity<JobApplicationDTO> acceptJobApplication(@PathVariable Long jobApplicationId, @RequestBody JobApplicationDTO jobApplicationDTO) {
-        return ResponseEntity.ok(applicantService.acceptJobApplication(jobApplicationId, jobApplicationDTO));
+    public ResponseEntity<JobApplicationDTO> acceptJobApplication(@PathVariable Long jobApplicationId, @RequestBody JobApplicationDTO jobApplicationDTO,@RequestBody List<String> certifiedSkills) {
+
+        return ResponseEntity.ok(applicantService.acceptJobApplication(jobApplicationId, jobApplicationDTO, certifiedSkills));
     }
 
 

@@ -177,14 +177,15 @@ public class ApplicantService {
         return modelMapper.map(wallet, WalletDTO.class);
     }
 
-    public JobApplicationDTO acceptJobApplication(Long jobApplicationId, JobApplicationDTO jobApplicationDTO) {
+    public JobApplicationDTO acceptJobApplication(Long jobApplicationId, JobApplicationDTO jobApplicationDTO, List<String> certifiedSkills) {
         JobApplication jobApplication = jobApplicationRepository.findById(jobApplicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Job Application not found"));
-
+         Applicant applicant = applicantRepository.getReferenceById(jobApplicationDTO.getApplicantId());
+         applicant.setCertifiedSkills(certifiedSkills);
+         applicantRepository.save(applicant);
         jobApplication.setApplicationStatus(ApplicationStatus.APPLIED);
         jobApplication.setJob(modelMapper.map(jobService.getJobById(jobApplicationDTO.getJobId()), Job.class));
         JobApplication savedJobApplication = jobApplicationRepository.save(jobApplication);
-
         return modelMapper.map(savedJobApplication, JobApplicationDTO.class);
     }
 }

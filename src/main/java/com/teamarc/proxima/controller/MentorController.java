@@ -26,11 +26,11 @@ public class MentorController {
         return ResponseEntity.ok(mentorService.getMentorProfile());
     }
 
-    @PreAuthorize("@mentorService.isOwnerOfProfile(#id)")
-    @PutMapping(path = "/profile/{id}")
-    public ResponseEntity<MentorProfileDTO> updateMentorProfile(@RequestBody Map<String, Object> object, @PathVariable Long id) {
-        return ResponseEntity.ok(mentorService.updateProfile(id, object));
-    }
+//    @PreAuthorize("@mentorService.isOwnerOfProfile(#id)")
+//    @PutMapping(path = "/profile/{id}")
+//    public ResponseEntity<MentorProfileDTO> updateMentorProfile(@RequestBody Map<String, Object> object, @PathVariable Long id) {
+//        return ResponseEntity.ok(mentorService.updateProfile(id, object));
+//    }
 
     @GetMapping(path = "/profile/rating")
     public ResponseEntity<Double> getMentorsAverageRating() {
@@ -49,11 +49,11 @@ public class MentorController {
         return ResponseEntity.ok(mentorService.createSession(session));
     }
 
-    @PreAuthorize("@mentorService.isOwnerOfSession(#id)")
-    @PutMapping(path = "/sessions/{id}")
-    public ResponseEntity<SessionDTO> updateSession(@RequestBody Map<String, Object> object, @PathVariable Long id) {
-        return ResponseEntity.ok(mentorService.updateSession(id, object));
-    }
+//    @PreAuthorize("@mentorService.isOwnerOfSession(#id)")
+//    @PutMapping(path = "/sessions/{id}")
+//    public ResponseEntity<SessionDTO> updateSession(@RequestBody Map<String, Object> object, @PathVariable Long id) {
+//        return ResponseEntity.ok(mentorService.updateSession(id, object));
+//    }
 
     @PreAuthorize("@mentorService.isOwnerOfSession(#id)")
     @PostMapping(path = "/sessions/{id}/accept")
