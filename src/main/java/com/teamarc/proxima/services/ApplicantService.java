@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -33,9 +34,10 @@ public class ApplicantService {
     private final RatingService ratingService;
     private final SessionManagementService sessionManagementService;
     private final WalletService walletService;
+    private final InterviewQuestionService interviewQuestionService;
 
     @Transactional
-    public JobApplicationDTO applyJob(Long jobId, JobApplicationDTO jobApplicationDTO) {
+    public List<QuestionDTO> applyJobRequest(Long jobId, JobApplicationDTO jobApplicationDTO) {
 
         Job job = modelMapper.map(jobService.getJobById(jobId), Job.class);
         if (job.getJobStatus().toString().equals("CLOSED")) {
@@ -47,11 +49,8 @@ public class ApplicantService {
         }
 
         JobApplication jobApplication = modelMapper.map(jobApplicationDTO, JobApplication.class);
-        jobApplication.setApplicationStatus(ApplicationStatus.APPLIED);
-        jobApplication.setJob(modelMapper.map(jobService.getJobById(jobApplicationDTO.getJobId()), Job.class));
-        JobApplication savedJobApplication = jobApplicationRepository.save(jobApplication);
+        return interviewQuestionService.generateQuestions(jobApplication);
 
-        return modelMapper.map(savedJobApplication, JobApplicationDTO.class);
     }
 
     @Transactional
@@ -176,5 +175,16 @@ public class ApplicantService {
     public WalletDTO getWallet() {
         Wallet wallet = walletService.getWalletByUserId(getCurrentApplicant().getUser().getId());
         return modelMapper.map(wallet, WalletDTO.class);
+    }
+
+    public JobApplicationDTO acceptJobApplication(Long jobApplicationId, JobApplicationDTO jobApplicationDTO) {
+        JobApplication jobApplication = jobApplicationRepository.findById(jobApplicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job Application not found"));
+
+        jobApplication.setApplicationStatus(ApplicationStatus.APPLIED);
+        jobApplication.setJob(modelMapper.map(jobService.getJobById(jobApplicationDTO.getJobId()), Job.class));
+        JobApplication savedJobApplication = jobApplicationRepository.save(jobApplication);
+
+        return modelMapper.map(savedJobApplication, JobApplicationDTO.class);
     }
 }

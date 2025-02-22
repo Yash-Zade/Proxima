@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -38,14 +39,19 @@ public class ApplicantController {
     }
 
     @PostMapping(path = "/jobs/{jobId}/apply")
-    public ResponseEntity<JobApplicationDTO> applyForJob(@PathVariable Long jobId, @RequestBody JobApplicationDTO jobApplication) {
-        return ResponseEntity.ok(applicantService.applyJob(jobId, jobApplication));
+    public ResponseEntity<List<QuestionDTO>> applyForJob(@PathVariable Long jobId, @RequestBody JobApplicationDTO jobApplication) {
+        return ResponseEntity.ok(applicantService.applyJobRequest(jobId, jobApplication));
     }
 
     @PreAuthorize("@applicantService.isOwnerOfApplication(#applicationId)")
     @PostMapping(path = "/jobs/{applicationId}/withdraw")
     public ResponseEntity<JobApplicationDTO> withdrawJobApplication(@PathVariable Long applicationId) {
         return ResponseEntity.ok(applicantService.withdrawApplication(applicationId));
+    }
+
+    @PostMapping(path = "/jobs/{application-id}/accept-application")
+    public ResponseEntity<JobApplicationDTO> acceptJobApplication(@PathVariable Long jobApplicationId, @RequestBody JobApplicationDTO jobApplicationDTO) {
+        return ResponseEntity.ok(applicantService.acceptJobApplication(jobApplicationId, jobApplicationDTO));
     }
 
 
