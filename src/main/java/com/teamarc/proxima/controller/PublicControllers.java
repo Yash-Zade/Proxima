@@ -1,8 +1,8 @@
 package com.teamarc.proxima.controller;
 
-import com.teamarc.proxima.dto.JobDTO;
-import com.teamarc.proxima.dto.MentorDTO;
-import com.teamarc.proxima.dto.SessionDTO;
+import com.teamarc.proxima.dto.*;
+import com.teamarc.proxima.entity.JobApplication;
+import com.teamarc.proxima.services.InterviewQuestionService;
 import com.teamarc.proxima.services.JobService;
 import com.teamarc.proxima.services.MentorService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +12,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @RestController
@@ -20,6 +22,7 @@ public class PublicControllers {
 
     private final JobService jobService;
     private final MentorService mentorService;
+    private final InterviewQuestionService interviewQuestionService;
 
 
     @GetMapping("/jobs")
@@ -54,6 +57,11 @@ public class PublicControllers {
     @GetMapping("/sessions/{id}")
     public ResponseEntity<SessionDTO> getSessionById(@PathVariable Long id) {
         return ResponseEntity.ok(mentorService.getSessionById(id));
+    }
+
+    @PostMapping("/questions")
+    public ResponseEntity<List<QuestionDTO>> createQuestion(@RequestBody String jd, @RequestBody String resume, @RequestBody List<String> certifiedSkills) {
+        return ResponseEntity.ok(interviewQuestionService.generateQuestions(jd, resume, certifiedSkills));
     }
 
 }

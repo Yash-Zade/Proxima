@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teamarc.proxima.dto.OptionDTO;
 import com.teamarc.proxima.dto.QuestionDTO;
+import com.teamarc.proxima.entity.Applicant;
+import com.teamarc.proxima.entity.Job;
 import com.teamarc.proxima.entity.JobApplication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -168,5 +170,15 @@ public class InterviewQuestionService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse Gemini response", e);
         }
+    }
+
+    public List<QuestionDTO> generateQuestions(String jd, String resume, List<String> certifiedSkills) {
+        JobApplication jobApplication = new JobApplication();
+        jobApplication.setJob(new Job());
+        jobApplication.getJob().setDescription(jd);
+        jobApplication.setApplicant(new Applicant());
+        jobApplication.getApplicant().setResume(resume);
+        jobApplication.getApplicant().setCertifiedSkills(certifiedSkills);
+        return generateQuestions(jobApplication);
     }
 }
